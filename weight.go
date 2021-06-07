@@ -85,12 +85,6 @@ type ConfigStruct struct {
 	Weights []*WeightNode
 }
 
-//type Config struct {
-//	Version string
-//	User    *User
-//	Group   []*Group
-//}
-
 
 //根据配置文件生成控制器
 func NewManagerWithCfgFile(filePath string) (*WeightManager, error) {
