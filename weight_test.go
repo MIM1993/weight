@@ -30,10 +30,10 @@ func TestWeight(t *testing.T) {
 	//}
 	rand.Seed(time.Now().UTC().UnixNano()) // always seed random!
 	m, err := NewManager(
-		&WeightNode{weightVal: 1, Item: "🍒"},
-		&WeightNode{weightVal: 4, Item: "🍋"},
-		&WeightNode{weightVal: 2, Item: "🍊"},
-		&WeightNode{weightVal: 5, Item: "🥑"},
+		&WeightNode{WeightVal: 1, Item: "🍒"},
+		&WeightNode{WeightVal: 4, Item: "🍋"},
+		&WeightNode{WeightVal: 2, Item: "🍊"},
+		&WeightNode{WeightVal: 5, Item: "🥑"},
 	)
 
 	if err != nil {
@@ -67,5 +67,57 @@ func TestWeight(t *testing.T) {
 	fmt.Println("================================")
 	fmt.Printf("🍒:%d\n🍋:%d\n🍊:%d\n🥑:%d\n",
 		freqs["🍒"],freqs["🍋"],freqs["🍊"],freqs["🥑"])
+
+}
+
+func TestWeightCfgFile(t *testing.T) {
+	wn,err := NewManagerWithCfgFile("conf.toml")
+	if err != nil{
+		panic(err)
+	}
+
+	fmt.Printf("%#v\n",wn)
+
+	t.Run("common", func(t *testing.T) {
+		for i:=0;i<100;i++{
+			tmp ,err := wn.Pink()
+			if err != nil{
+				panic(err)
+			}
+			fmt.Print(tmp)
+		}
+	})
+
+	t.Run("fruit", func(t *testing.T) {
+
+		fmt.Println("===================")
+		fmt.Printf("total:%d\n",wn.Total)
+		for i,v := range wn.WeightNodes{
+			fmt.Printf("node%d: %#v\n",i,v)
+		}
+		fmt.Println("===================")
+
+
+		fruits := make([]string, 40*18)
+		for i:=0;i<len(fruits);i++{
+			tmp,err := wn.Pink()
+			if err != nil{
+				panic(fmt.Sprintf("Pink err:%s", err))
+			}
+			fruits[i]=tmp
+		}
+
+		fmt.Println(fruits)
+
+
+		freqs:=make(map[string]int)
+		for _,v := range fruits  {
+			freqs[v]++
+		}
+		fmt.Println("================================")
+		fmt.Printf("🍒:%d\n🍋:%d\n🍊:%d\n🥑:%d\n",
+			freqs["🍒"],freqs["🍋"],freqs["🍊"],freqs["🥑"])
+	})
+
 
 }

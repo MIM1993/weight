@@ -8,6 +8,8 @@ package weight
 
 import (
 	"errors"
+	"fmt"
+	"github.com/BurntSushi/toml"
 	"math/rand"
 	"sort"
 )
@@ -30,23 +32,27 @@ type WeightManager struct {
 
 //权重节点
 type WeightNode struct {
-	weightVal int
+	WeightVal int
 	Item      string
 }
 
 //创建node
 func NewNode(wv int, val string) *WeightNode {
 	return &WeightNode{
-		weightVal: wv,
+		WeightVal: wv,
 		Item:      val,
 	}
 }
 
 //创建控制器
 func NewManager(nodes ...*WeightNode) (*WeightManager, error) {
+	return newManager(nodes...)
+}
+
+func newManager(nodes ...*WeightNode) (*WeightManager, error) {
 	if len(nodes) > 0 {
 		sort.Slice(nodes, func(i, j int) bool {
-			return nodes[i].weightVal < nodes[j].weightVal
+			return nodes[i].WeightVal < nodes[j].WeightVal
 		})
 	}
 
@@ -55,46 +61,65 @@ func NewManager(nodes ...*WeightNode) (*WeightManager, error) {
 
 	//生成索引
 	for i, v := range nodes {
-		if (maxInt - total) <= v.weightVal {
+		if (maxInt - total) <= v.WeightVal {
 			return nil, errors.New("sum of Choice Weights exceeds max int")
 		}
-		total += v.weightVal
+		total += v.WeightVal
 		tmpArr[i] = total
 	}
 
-	if total < 1{
+	if total < 1 {
 		//todo：权重总和不能小于1，可以在初始化配置时进行校验
-		return nil,errors.New("zero Choices with Weight >= 1")
+		return nil, errors.New("zero Choices with Weight >= 1")
 	}
 
 	res := new(WeightManager)
 	res.Total = total
 	res.WeightNodes = nodes
 	res.weightVals = tmpArr
-	return res,nil
+	return res, nil
+}
+
+
+type ConfigStruct struct {
+	Weights []*WeightNode
+}
+
+//type Config struct {
+//	Version string
+//	User    *User
+//	Group   []*Group
+//}
+
+
+//根据配置文件生成控制器
+func NewManagerWithCfgFile(filePath string) (*WeightManager, error) {
+	var conf *ConfigStruct
+	if _, err := toml.DecodeFile(filePath, &conf); err != nil {
+		return nil, fmt.Errorf("read config file err:%v", err)
+	}
+	return newManager(conf.Weights...)
 }
 
 //并发不安全
-func(wm *WeightManager)Pink()(string,error){
-	n := rand.Intn(wm.Total) +1
-	idx := searchInts(wm.weightVals,n)
-	if idx > len(wm.WeightNodes){
+func (wm *WeightManager) Pink() (string, error) {
+	n := rand.Intn(wm.Total) + 1
+	idx := searchInts(wm.weightVals, n)
+	if idx > len(wm.WeightNodes) {
 		return "", errors.New("index over")
 	}
-	return wm.WeightNodes[idx].Item,nil
+	return wm.WeightNodes[idx].Item, nil
 }
-
 
 //并发安全,从函数外传入随机数种子
-func(wm *WeightManager)PinkSource(rs *rand.Rand)(string,error){
-	n := rs.Intn(wm.Total) +1
-	idx := searchInts(wm.weightVals,n)
-	if idx > len(wm.WeightNodes){
+func (wm *WeightManager) PinkSource(rs *rand.Rand) (string, error) {
+	n := rs.Intn(wm.Total) + 1
+	idx := searchInts(wm.weightVals, n)
+	if idx > len(wm.WeightNodes) {
 		return "", errors.New("index over")
 	}
-	return wm.WeightNodes[idx].Item,nil
+	return wm.WeightNodes[idx].Item, nil
 }
-
 
 //从golang sort中直接抄来的
 // The standard library sort.SearchInts() just wraps the generic sort.Search()

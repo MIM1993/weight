@@ -1,0 +1,12 @@
+[[Weights]]
+WeightVal = 1
+Item = "🍒"
+[[Weights]]
+WeightVal = 2
+Item = "🍊"
+[[Weights]]
+WeightVal = 5
+Item = "🥑"
+[[Weights]]
+WeightVal = 3
+Item = "🍋"
